@@ -1,0 +1,83 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Keep this page public-safe: no internal IPs, hostnames, NodePorts or anything
+// that maps your network. Describe the design, not the attack surface.
+const stack = [
+  { layer: 'Compute', tool: 'k3s, single node, on an Ubuntu VM in Synology Virtual Machine Manager', why: 'Full Kubernetes API on hardware I already own.' },
+  { layer: 'GitOps', tool: 'Argo CD, App-of-Apps', why: 'Git is the only way in. Manual changes self-heal back to the committed state.' },
+  { layer: 'CI', tool: 'GitHub Actions to GHCR', why: 'Every push builds an image; the cluster never builds anything.' },
+  { layer: 'Ingress', tool: 'Traefik', why: 'Ships with k3s and handles routing for every public site.' },
+  { layer: 'TLS', tool: 'cert-manager, Let\'s Encrypt DNS-01 via Cloudflare', why: 'Certificates are issued with no inbound port needed for validation.' },
+  { layer: 'Secrets', tool: 'Sealed Secrets', why: 'Credentials are encrypted, so they can live in the repo.' },
+  { layer: 'DNS and edge', tool: 'Cloudflare, Full (strict) TLS', why: 'Proxied public records and dynamic DNS for a home connection.' },
+  { layer: 'Remote access', tool: 'Tailscale subnet router', why: 'Admin access from anywhere without opening router ports.' },
+  { layer: 'Storage', tool: 'local-path provisioner and a Synology NAS', why: 'Simple volumes in the cluster, bulk storage on the NAS.' },
+];
+
+const changelog = [
+  { date: 'Sep 2026', text: 'Moved the apex domain from WordPress to this Astro site, deployed the same way as the CV.' },
+  { date: 'Sep 2026', text: 'Migrated k3s from a bare-metal ThinkCentre to a VM on the Synology NAS.' },
+];
+---
+<Base title="The lab" description="What runs my homelab, how it's deployed, and why each piece is there.">
+  <div class="grid-paper">
+    <div class="wrap page-head">
+      <h1>The lab</h1>
+      <p>A small Kubernetes cluster at home, run the way I'd want production to be run: everything declared in git and reconciled automatically.</p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section aria-labelledby="how">
+      <h2 id="how">How a change reaches the cluster</h2>
+      <div class="prose">
+        <p>
+          I push to GitHub. Actions builds a container image and publishes it to GHCR, then
+          updates the image tag in the homelab repository. Argo CD sees the new commit and
+          syncs the cluster to match. I don't run <code>kubectl apply</code> by hand. If
+          something isn't in git, it doesn't exist.
+        </p>
+        <p>
+          This page is served that way. So is <a href="https://cv.gabrieldinu.co.uk">my CV</a>.
+          The manifests are in <a href="https://github.com/gabridinu/homelab">gabridinu/homelab</a>.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="stack">
+      <h2 id="stack">The stack</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th scope="col">Layer</th><th scope="col">What</th><th scope="col">Why</th></tr></thead>
+          <tbody>
+            {stack.map((row) => (
+              <tr><th scope="row">{row.layer}</th><td>{row.tool}</td><td>{row.why}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="changes">
+      <h2 id="changes">Changelog</h2>
+      <ol class="changelog">
+        {changelog.map((c) => <li><span>{c.date}</span><p>{c.text}</p></li>)}
+      </ol>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .table-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper-raised); }
+  table { border-collapse: collapse; width: 100%; min-width: 38rem; font-size: 0.97rem; }
+  th, td { text-align: left; vertical-align: top; padding: 0.7rem 1rem; border-bottom: 1px solid var(--rule); }
+  tbody tr:last-child > * { border-bottom: 0; }
+  thead th { font-weight: 600; color: var(--muted); font-size: 0.9rem; }
+  tbody th { font-weight: 650; white-space: nowrap; }
+  td:last-child { color: var(--muted); }
+  .changelog { list-style: none; margin: 0; padding: 0; max-width: 42rem; }
+  .changelog li { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; padding-block: 0.6rem; border-top: 1px solid var(--rule); }
+  .changelog span { color: var(--muted); font-size: 0.9rem; padding-top: 0.1rem; }
+  .changelog p { margin: 0; }
+</style>

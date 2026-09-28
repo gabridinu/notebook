@@ -1,0 +1,22 @@
+---
+const year = new Date().getFullYear();
+---
+<footer>
+  <div class="wrap row">
+    <p>© {year} Gabriel Dinu. Built with Astro and deployed by Argo CD to a cluster in my home.</p>
+    <ul>
+      <li><a href="https://github.com/gabridinu">GitHub</a></li>
+      <li><a href="https://www.linkedin.com/in/gabridinu">LinkedIn</a></li>
+      <li><a href="/rss.xml">RSS</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--rule); margin-top: 4rem; color: var(--muted); font-size: 0.9rem; }
+  .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; padding-block: 1.75rem; }
+  p { margin: 0; }
+  ul { display: flex; gap: 1.25rem; list-style: none; margin: 0; padding: 0; }
+  a { color: var(--muted); }
+  a:hover { color: var(--accent); }
+</style>

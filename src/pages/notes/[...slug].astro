@@ -1,0 +1,52 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getNotes, formatDate, isoDate, type Note } from '../../lib';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+}
+
+interface Props { note: Note }
+const { note } = Astro.props;
+const { Content } = await render(note);
+const { title, description, date, updated, tags, draft } = note.data;
+---
+<Base title={title} description={description} type="article">
+  <article>
+    <div class="grid-paper">
+      <header class="wrap page-head">
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <p class="meta">
+          <time datetime={isoDate(date)}>{formatDate(date)}</time>
+          {updated && <span>, updated <time datetime={isoDate(updated)}>{formatDate(updated)}</time></span>}
+          {draft && <strong class="draft"> (draft, not published)</strong>}
+        </p>
+      </header>
+    </div>
+    <div class="wrap body">
+      <div class="prose">
+        <Content />
+      </div>
+      {tags.length > 0 && (
+        <footer class="note-foot">
+          <ul class="tags" aria-label="Topics">
+            {tags.map((t) => <li><a href={`/tags/${t}/`}>{t}</a></li>)}
+          </ul>
+          <p><a href="/notes/">Back to all notes</a></p>
+        </footer>
+      )}
+    </div>
+  </article>
+</Base>
+
+<style>
+  .page-head h1 { max-width: 48rem; }
+  .meta { font-size: 0.95rem !important; margin-top: 1rem !important; }
+  .draft { color: var(--accent); font-weight: 600; }
+  .body { padding-top: 2.5rem; }
+  .note-foot { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); max-width: var(--measure); }
+  .note-foot p { margin: 1.25rem 0 0; }
+</style>

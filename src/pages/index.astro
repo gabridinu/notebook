@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import NoteList from '../components/NoteList.astro';
+import { getNotes } from '../lib';
+
+const latest = (await getNotes()).slice(0, 5);
+---
+<Base>
+  <div class="grid-paper">
+    <div class="wrap hero">
+      <h1>Lab notes</h1>
+      <p class="lede">
+        I lead an L2 support team for retail POS and self-checkout estates, and I run a
+        GitOps homelab the rest of the time. These are my notes on what broke, why it broke,
+        and how I fixed it.
+      </p>
+      <p class="more">
+        Looking for my experience and skills? <a href="https://cv.gabrieldinu.co.uk">Read my CV</a>.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section aria-labelledby="currently">
+      <h2 id="currently">Currently</h2>
+      <p class="currently">
+        Moving the homelab to SHA-tagged images with automatic commit-back, so Argo CD deploys
+        exactly what CI built. More on the <a href="/now/">now page</a>.
+      </p>
+    </section>
+
+    <section aria-labelledby="latest">
+      <h2 id="latest">Latest notes</h2>
+      <NoteList notes={latest} />
+      <p class="all"><a href="/notes/">All notes</a></p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero { padding-block: clamp(3.5rem, 10vw, 7rem) clamp(2.5rem, 6vw, 4.5rem); }
+  h1 {
+    font-size: clamp(3.2rem, 12vw, 7.5rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.92;
+    margin: 0 0 1.5rem;
+  }
+  .lede { font-size: clamp(1.15rem, 2.2vw, 1.35rem); max-width: 38rem; margin: 0 0 1rem; }
+  .more { margin: 0; color: var(--muted); }
+  .currently { max-width: 40rem; margin: 0; }
+  .all { margin: 1.25rem 0 0; }
+</style>

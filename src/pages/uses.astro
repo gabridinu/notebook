@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Fill these in with your real kit. Delete any group you don't want to show.
+const groups = [
+  {
+    name: 'Homelab hardware',
+    items: [
+      'Synology NAS: hosts the k3s VM, storage and internal DNS',
+      'Lenovo ThinkCentre M710q: the cluster\'s first home, now retired',
+    ],
+  },
+  {
+    name: 'Platform',
+    items: ['k3s', 'Argo CD', 'Helm', 'Traefik', 'cert-manager', 'Sealed Secrets', 'Tailscale', 'Cloudflare'],
+  },
+  {
+    name: 'Everyday tools',
+    items: ['VS Code', 'Git and GitHub', 'Bash and Python', 'Windows Terminal'],
+  },
+];
+---
+<Base title="Uses" description="The hardware and software I use for work and for the lab.">
+  <div class="grid-paper">
+    <div class="wrap page-head">
+      <h1>Uses</h1>
+      <p>The hardware and software I rely on, at home and at work.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    {groups.map((g) => (
+      <section>
+        <h2>{g.name}</h2>
+        <ul class="uses">{g.items.map((i) => <li>{i}</li>)}</ul>
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .uses { margin: 0; padding-left: 1.2rem; max-width: 40rem; }
+  .uses li + li { margin-top: 0.35rem; }
+</style>

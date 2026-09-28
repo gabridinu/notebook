@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+
+// Update this every month or so. Keep the date honest.
+const updated = new Date('2026-09-28');
+---
+<Base title="Now" description="What I'm focused on at the moment.">
+  <div class="grid-paper">
+    <div class="wrap page-head">
+      <h1>Now</h1>
+      <p>What I'm focused on at the moment. Last updated {updated.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <section>
+      <div class="prose">
+        <ul>
+          <li>Switching the homelab from <code>:latest</code> to SHA-tagged images, with CI committing the new tag back to the GitOps repo.</li>
+          <li>Writing up the move of my k3s node from bare metal to a VM on the NAS.</li>
+          <li>Looking for platform, infrastructure and DevOps roles. <a href="https://cv.gabrieldinu.co.uk">My CV is here</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</Base>

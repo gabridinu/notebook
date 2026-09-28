@@ -1,0 +1,89 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Only one deploy at a time, so two quick pushes can't race on the homelab commit.
+concurrency:
+  group: build-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/gabridinu/notebook
+  HOMELAB_REPO: gabridinu/homelab
+  KUSTOMIZATION: apps/notebook/manifests/kustomization.yaml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compute image tag
+        id: meta
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # On pull requests this only proves the site builds; nothing is pushed.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out homelab repo
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ env.HOMELAB_REPO }}
+          token: ${{ secrets.HOMELAB_TOKEN }}
+          path: homelab
+
+      - name: Bump image tag
+        working-directory: homelab
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+        run: |
+          # yq (mikefarah v4) is preinstalled on GitHub-hosted Ubuntu runners.
+          yq -i '(.images[] | select(.name == strenv(IMAGE))).newTag = strenv(TAG)' "$KUSTOMIZATION"
+          git diff --exit-code "$KUSTOMIZATION" && { echo "Tag already $TAG, nothing to do"; exit 0; }
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "notebook: deploy $TAG" -m "From ${{ github.repository }}@${{ github.sha }}"
+
+          # Retry in case something else pushed to homelab in the meantime.
+          for i in 1 2 3; do
+            git pull --rebase && git push && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

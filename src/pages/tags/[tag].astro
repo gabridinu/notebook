@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import NoteList from '../../components/NoteList.astro';
+import { getNotes, type Note } from '../../lib';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  const tags = [...new Set(notes.flatMap((n) => n.data.tags))];
+  return tags.map((tag) => ({
+    params: { tag },
+    props: { tag, notes: notes.filter((n) => n.data.tags.includes(tag)) },
+  }));
+}
+
+interface Props { tag: string; notes: Note[] }
+const { tag, notes } = Astro.props;
+---
+<Base title={`Notes on ${tag}`} description={`Notes tagged ${tag}.`}>
+  <div class="grid-paper">
+    <div class="wrap page-head">
+      <h1>{tag}</h1>
+      <p>{notes.length} {notes.length === 1 ? 'note' : 'notes'} on this topic. <a href="/notes/">See all notes</a>.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <section aria-label={`Notes tagged ${tag}`}>
+      <NoteList notes={notes} />
+    </section>
+  </div>
+</Base>

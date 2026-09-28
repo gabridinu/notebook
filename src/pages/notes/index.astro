@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import NoteList from '../../components/NoteList.astro';
+import { getNotes } from '../../lib';
+
+const notes = await getNotes();
+const tags = [...new Set(notes.flatMap((n) => n.data.tags))].sort();
+---
+<Base title="Notes" description="Every note, newest first.">
+  <div class="grid-paper">
+    <div class="wrap page-head">
+      <h1>Notes</h1>
+      <p>Write-ups of real problems from production and from the homelab. Newest first.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    {tags.length > 0 && (
+      <section aria-label="Filter by topic">
+        <ul class="tags">
+          {tags.map((t) => <li><a href={`/tags/${t}/`}>{t}</a></li>)}
+        </ul>
+      </section>
+    )}
+    <section aria-label="All notes">
+      <NoteList notes={notes} />
+    </section>
+  </div>
+</Base>
